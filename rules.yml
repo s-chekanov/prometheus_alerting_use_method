@@ -1,0 +1,99 @@
+# Based on:
+# https://alex.dzyoba.com/blog/prometheus-alerts/
+# https://awesome-prometheus-alerts.grep.to/rules.html
+
+groups:
+- name: Very important things
+  rules:
+
+  - alert: NodeDown
+    expr: up{job="node_exporter"} == 0
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      title: Node {{ $labels.instance }} is down
+      description: Failed to scrape {{ $labels.job }} on {{ $labels.instance }} for more than 3 minutes. Node seems down.
+
+  - alert: JobDown
+    expr: up{job!="node_exporter"} == 0
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      title: Job {{ $labels.job }} on {{ $labels.instance }} is down
+      description: Failed to scrape {{ $labels.job }} on {{ $labels.instance }} for more than 3 minutes.
+
+  - alert: ModeThinPoolLowFreeSpace
+    expr: node_lvmetad_data_percent{pool_lv="none"} > 80
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      title: Server {{ $labels.instance }} thin_pool is 80% used
+      description: Server {{ $labels.instance }} thin_pool is 80% used
+
+  - alert: NodeThinPoolLowMetadataFreeSpace
+    expr: node_lvmetad_metadata_percent{pool_lv="none"} > 80
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      title: Server {{ $labels.instance }} thin_pool metadata is 80% used
+      description: Server {{ $labels.instance }} thin_pool metadata is 80% used
+
+  - alert: NodeHighLoadAvg
+    expr: node_load15 / count without(cpu, mode) (node_cpu_seconds_total{mode="idle"}) > 1.2
+    for: 30s
+    labels:
+      severity: warning
+    annotations:
+      summary: "Server under high LA"
+      description: "Server is under high LA, the avg load 15m is at {{ $value}}. Reported by instance {{ $labels.instance }} of job {{ $labels.job }}."
+  
+  # this extra rule may be very useful, by our practice!
+  - alert: NodeRaidDegrade
+    expr: sum by (device, instance) (node_md_disks_required) - sum by (device, instance) (node_md_disks{state="active"}) > 0
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: MDRAID on node {{ $labels.instance }} is is in degrade mode
+      description: Degraded RAID array {{ $labels.device }} on {{ $labels.instance }} {{ $value }} disks failed
+
+  - alert: NodeLowFreeSpace
+    expr: node_filesystem_free_bytes / node_filesystem_size_bytes * 100 < 25
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      title: Low free space on {{ $labels.instance }}
+      description: On {{ $labels.instance }} device {{ $labels.device }} mounted on {{ $labels.mountpoint }} has low free space of {{ $value }}%
+
+  - alert: NodeDiskUtil
+    expr: rate(node_disk_io_time_seconds_total{device=~"sd.|nvme.*"}[5m]) * 100 > 80
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host disk util {{ $labels.instance }} > 50%"
+      description: "Host disk util {{ $labels.instance }} > 50%"
+
+  - alert: NodeNetworkInterfaceUtil
+    expr: rate(node_network_transmit_bytes_total{device!~"tap.*"}[5m]) / node_network_speed_bytes * 100 > 75
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Host network interface util {{ $labels.instance }} > 75%"
+      description: "Host network interface util {{ $labels.instance }} > 75%"
+
+  - alert: ProbeUnsuccess
+    expr: probe_success < 1
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Probe is unsuccess {{ $labels.instance }}"
+      description: "Probe is unsuccess {{ $labels.instance }}"
+

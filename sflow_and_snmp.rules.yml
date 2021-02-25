@@ -1,0 +1,22 @@
+groups:
+- name: sFlow and SNMP triggers
+  rules:
+
+  - alert: Errors on interface
+    expr: rate(ifOutErrors[5m]) > 0 or rate(ifInErrors[5m]) > 0 or sflow_ifouterrors > 0 or sflow_ifinerrors > 0 or sflow_eth_symbolerrors > 0 or sflow_eth_fcserrors > 0
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      title: Errors on interface {{ $labels.ifindex }}{{ $labels.ifName }}{{ $labels.ifAlias }} is down
+      description: Errors on interface {{ $labels.ifindex }}{{ $labels.ifName }}{{ $labels.ifAlias }} is down 
+
+  - alert: Utilization of interface
+    expr: (sflow_ifinutilization or sflow_ifoututilization or rate(ifInOctets[5m])*8/ifSpeed*100 or rate(ifOutOctets[5m])*8/ifSpeed*100 ) > 70
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      title: Utilization of interface {{ $labels.ifindex }}{{ $labels.ifName }}{{ $labels.ifAlias }} is down
+      description: Utilization interface {{ $labels.ifindex }}{{ $labels.ifName }}{{ $labels.ifAlias }} is down 
+

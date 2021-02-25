@@ -1,0 +1,59 @@
+groups:
+- name: OpenStack
+  rules:
+
+  - alert: OpenStackNeutronDown
+    expr: openstack_neutron_agent_state{adminState="up"} == 0 or openstack_neutron_up == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "OpenStack Neutron service down {{ $labels.instance }}"
+      description: "OpenStack Neutron service {{ $labels.instance }}"
+
+  - alert: OpenStackNovaDown
+    expr: openstack_nova_agent_state{adminState="enabled"} == 0 or openstack_nova_up == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "OpenStack Nova service down {{ $labels.instance }}"
+      description: "OpenStack Nova service {{ $labels.instance }}"
+
+  - alert: OpenStackCinderDown
+    expr: openstack_cinder_up == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "OpenStack Cinder service down {{ $labels.instance }}"
+      description: "OpenStack Cinder service {{ $labels.instance }}"
+
+  - alert: OpenStackGlanceDown
+    expr: openstack_glance_up == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "OpenStack Glance service down {{ $labels.instance }}"
+      description: "OpenStack Glance service {{ $labels.instance }}"
+
+  - alert: OpenStackKeystoneDown
+    expr: openstack_identity_up == 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "OpenStack Keystone service down {{ $labels.instance }}"
+      description: "OpenStack Keystone service {{ $labels.instance }}"
+
+  - alert: OpenStackInstanceInErrorStatus
+    expr: openstack_nova_server_status{status="ERROR"} > 0
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "OpenStack Instance(s) in error state {{ $labels.instance }}"
+      description: "OpenStack Instance(s) in error start {{ $labels.instance }}"
+
+
